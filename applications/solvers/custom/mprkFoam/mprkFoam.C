@@ -74,7 +74,6 @@ int main(int argc, char *argv[])
 
         labelList fineCellRegion(mesh.nCells(), 0);
         labelList coarseCellRegion(mesh.nCells(), 0);
-
         
         scalar coarseVolume = 0.0f;
         scalar fineVolume = mesh.V()[0];
