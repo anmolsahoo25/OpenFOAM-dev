@@ -33,6 +33,7 @@ Description
 #include "fvOptions.H"
 #include "simpleControl.H"
 #include "dynamicRefineFvMesh.H"
+#include "fvMeshSubset.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -157,7 +158,7 @@ int main(int argc, char *argv[])
 
         subsetFine.setLargeCellSubset(fineCellRegion, 2);
         subsetCoarse.setLargeCellSubset(coarseCellRegion, 2);
-        
+
         fvScalarMatrix cEqn
         (
             fvm::ddt(c) == -fvc::div(phi, c)
