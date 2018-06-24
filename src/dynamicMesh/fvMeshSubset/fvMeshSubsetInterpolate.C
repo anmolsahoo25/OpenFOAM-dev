@@ -92,7 +92,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh>> fvMeshSubset::interpolate
                 "subset"+vf.name(),
                 sMesh.time().timeName(),
                 sMesh,
-                IOobject::NO_READ,
+                IOobject::READ_IF_PRESENT,
                 IOobject::NO_WRITE
             ),
             sMesh,
@@ -229,7 +229,7 @@ tmp<GeometricField<Type, fvsPatchField, surfaceMesh>> fvMeshSubset::interpolate
                 "subset"+vf.name(),
                 sMesh.time().timeName(),
                 sMesh,
-                IOobject::NO_READ,
+                IOobject::READ_IF_PRESENT,
                 IOobject::NO_WRITE
             ),
             sMesh,
@@ -413,7 +413,7 @@ fvMeshSubset::interpolate
                 "subset"+vf.name(),
                 sMesh.time().timeName(),
                 sMesh.thisDb(),
-                IOobject::NO_READ,
+                IOobject::READ_IF_PRESENT,
                 IOobject::NO_WRITE
             ),
             sMesh,
@@ -523,7 +523,7 @@ tmp<DimensionedField<Type, volMesh>> fvMeshSubset::interpolate
                 "subset"+df.name(),
                 sMesh.time().timeName(),
                 sMesh,
-                IOobject::NO_READ,
+                IOobject::READ_IF_PRESENT,
                 IOobject::NO_WRITE
             ),
             sMesh,

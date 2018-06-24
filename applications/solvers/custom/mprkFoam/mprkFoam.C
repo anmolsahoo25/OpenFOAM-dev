@@ -163,56 +163,24 @@ int main(int argc, char *argv[])
         // Extracting the fields for the different zones
 
         // Creating the fields for the fine zone
-        volScalarField cf(
-            IOobject(
-                "cf",
-                runTime.timeName(),
-                mesh,
-                IOobject::READ_IF_PRESENT,
-                IOobject::AUTO_WRITE
-            ),
-            subsetFine.interpolate(c)()
-        );
-
-        surfaceScalarField phif(
-            IOobject(
-                "phif",
-                runTime.timeName(),
-                mesh,
-                IOobject::READ_IF_PRESENT,
-                IOobject::AUTO_WRITE
-            ),
-            subsetFine.interpolate(phi)()
-        );
+        volScalarField cf = subsetFine.interpolate(c)();
+        surfaceScalarField phif = subsetFine.interpolate(phi)();
 
         // Creating the fields for the coarse zone
-        volScalarField cc(
-            IOobject(
-                "cc",
-                runTime.timeName(),
-                mesh,
-                IOobject::READ_IF_PRESENT,
-                IOobject::AUTO_WRITE
-            ),
-            subsetCoarse.interpolate(c)()
-        );
-
-        surfaceScalarField phic(
-            IOobject(
-                "phic",
-                runTime.timeName(),
-                mesh,
-                IOobject::READ_IF_PRESENT,
-                IOobject::AUTO_WRITE
-            ),
-            subsetCoarse.interpolate(phi)()
-        );
+        volScalarField cc = subsetCoarse.interpolate(c)();
+        surfaceScalarField phic = subsetCoarse.interpolate(phi)();
         
         // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
         // Performing one time step increment for the various zones
 
         scalar scaleFactor = fineVolume / coarseVolume;
         int subSteps = static_cast<int>(1/scaleFactor);
+
+        dimensionedScalar deltaT1(
+            "deltaT1",
+            dimensionSet(0,0,1,0,0,0,0),
+            1.0
+        );
 
         dimensionedScalar deltaTf(
             "deltaTf",
@@ -233,16 +201,7 @@ int main(int argc, char *argv[])
         );
 
         // Time stepping for the fine zone
-        volScalarField cf_temp(
-            IOobject(
-                "cf_temp",
-                runTime.timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            cf
-        );
+        volScalarField cf_temp(cf);
 
         volScalarField RHSf(cf);
         forAll(RHSf, i) {
@@ -255,7 +214,7 @@ int main(int argc, char *argv[])
             volScalarField k1f = fvc::div(phif, cf_temp);
             cf_temp = cf_temp + k1f*deltaTf;
             volScalarField k2f = fvc::div(phif, cf_temp);
-            RHSf = RHSf - 0.5*scaleFactor*runTime.deltaTValue()*(k1f + k2f);
+            RHSf = RHSf - 0.5*scaleFactor*runTime.deltaTValue()*deltaT1*(k1f + k2f);
             cf_temp = cf_temp + deltaTf2*(k1f + k2f);
         }
 
@@ -280,7 +239,7 @@ int main(int argc, char *argv[])
         volScalarField k1c = fvc::div(phic, cc_temp);
         cc_temp = cc_temp + k1c*deltaT;
         volScalarField k2c = fvc::div(phif, cc_temp);
-        RHSc = RHSc - 0.5*runTime.deltaTValue()*(k1c + k2c);
+        RHSc = RHSc - 0.5*runTime.deltaTValue()*deltaT1*(k1c + k2c);
 
         // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
         // Remapping the RHSf and RHSc obtained to the main RHS
