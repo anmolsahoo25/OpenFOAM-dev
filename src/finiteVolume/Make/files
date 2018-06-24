@@ -353,6 +353,8 @@ $(ddtSchemes)/backwardDdtScheme/backwardDdtSchemes.C
 $(ddtSchemes)/CrankNicolsonDdtScheme/CrankNicolsonDdtSchemes.C
 $(ddtSchemes)/boundedDdtScheme/boundedDdtSchemes.C
 
+$(ddtSchemes)/Rk2DdtScheme/Rk2DdtSchemes.C
+
 d2dt2Schemes = finiteVolume/d2dt2Schemes
 $(d2dt2Schemes)/d2dt2Scheme/d2dt2Schemes.C
 $(d2dt2Schemes)/steadyStateD2dt2Scheme/steadyStateD2dt2Schemes.C
