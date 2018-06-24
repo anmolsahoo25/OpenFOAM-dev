@@ -159,11 +159,6 @@ int main(int argc, char *argv[])
         subsetFine.setLargeCellSubset(fineCellRegion, 2);
         subsetCoarse.setLargeCellSubset(coarseCellRegion, 2);
 
-        fvScalarMatrix cEqn
-        (
-            fvm::ddt(c) == -fvc::div(phi, c)
-        );
-
         // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
         // Extracting the fields for the different zones
 
@@ -217,7 +212,7 @@ int main(int argc, char *argv[])
         // Performing one time step increment for the various zones
 
         scalar scaleFactor = fineVolume / coarseVolume;
-        int subSteps = (int)1/scaleFactor;
+        int subSteps = static_cast<int>(1/scaleFactor);
 
         dimensionedScalar deltaTf(
             "deltaTf",
@@ -287,6 +282,42 @@ int main(int argc, char *argv[])
         volScalarField k2c = fvc::div(phif, cc_temp);
         RHSc = RHSc - 0.5*runTime.deltaTValue()*(k1c + k2c);
 
+        // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+        // Remapping the RHSf and RHSc obtained to the main RHS
+        
+        volScalarField RHS(c);
+        forAll(RHS, i) {
+            RHS[i] = 0.0;
+        }
+
+        // If the cell is coarse, take value from coarse subset
+        forAll(subsetCoarse.cellMap(), i) {
+            label cellIndex = subsetFine.cellMap()[i];
+            if(cmptMag(mesh.V()[cellIndex] - coarseVolume) < 1e-10) {
+                RHS[cellIndex] = RHSc[i];
+            }
+        }
+
+        // If the cell is fine, take value from fine subset and also set neighbours to fine for stability zone
+        forAll(subsetFine.cellMap(), i) {
+            label cellIndex = subsetFine.cellMap()[i];
+            if(cmptMag(mesh.V()[cellIndex] - coarseVolume) > 1e-10) {
+                RHS[cellIndex] = RHSf[i];
+            }
+            else {
+                forAll(mesh.cellCells()[cellIndex], k) {
+                    if(cmptMag(mesh.V()[mesh.cellCells()[cellIndex][k]] - coarseVolume) > 1e-10) {
+                        RHS[cellIndex] = RHSf[i];
+                    }
+                }
+            }
+        }
+
+
+        // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+        // Solve the equation for c
+        
+        fvScalarMatrix cEqn(fvm::ddt(c) == RHS);
         cEqn.solve();
 
         runTime.write();
