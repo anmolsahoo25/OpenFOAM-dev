@@ -1,0 +1,48 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  dev                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      dynamicMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dynamicFvMesh      dynamicRefineFvMesh;
+
+// Refine every refineInterval timesteps
+refineInterval 1;
+
+// Maximum refinement level (starts from 0)
+maxRefinement 2;
+
+// Maximum cell limit (approximate)
+maxCells 10000;
+
+// volScalarField to base refinement on
+field c;
+
+nBufferLayers 1;
+
+dumpLevel true;
+
+lowerRefineLevel 0.8;
+upperRefineLevel 0.9;
+
+unrefineLevel 0.1;
+
+nBufferLayers 1;
+
+// Fluxes to adapt. For newly created faces or split faces the flux
+// gets estimated from an interpolated volVectorField ('velocity')
+// First is name of the flux to adapt, second is velocity that will
+// be interpolated and inner-producted with the face area vector.
+correctFluxes ((phi rhoU) (phi_0 none));
+
+// ************************************************************************* //
