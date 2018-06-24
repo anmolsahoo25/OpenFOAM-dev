@@ -213,6 +213,80 @@ int main(int argc, char *argv[])
             subsetCoarse.interpolate(phi)()
         );
         
+        // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+        // Performing one time step increment for the various zones
+
+        scalar scaleFactor = fineVolume / coarseVolume;
+        int subSteps = (int)1/scaleFactor;
+
+        dimensionedScalar deltaTf(
+            "deltaTf",
+            dimensionSet(0,0,1,0,0,0,0),
+            scaleFactor*runTime.deltaTValue()
+        );
+
+        dimensionedScalar deltaTf2(
+            "deltaTf2",
+            dimensionSet(0,0,1,0,0,0,0),
+            0.5*scaleFactor*runTime.deltaTValue()
+        );
+
+        dimensionedScalar deltaT(
+            "deltaT",
+            dimensionSet(0,0,1,0,0,0,0),
+            runTime.deltaTValue()
+        );
+
+        // Time stepping for the fine zone
+        volScalarField cf_temp(
+            IOobject(
+                "cf_temp",
+                runTime.timeName(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            cf
+        );
+
+        volScalarField RHSf(cf);
+        forAll(RHSf, i) {
+            RHSf[i] = 0.0;
+        }
+
+        // Substepping for the fine region
+        for(int i = 0; i < subSteps; i++) {
+            volScalarField cf_temp1("cf_temp1", cf_temp);
+            volScalarField k1f = fvc::div(phif, cf_temp);
+            cf_temp = cf_temp + k1f*deltaTf;
+            volScalarField k2f = fvc::div(phif, cf_temp);
+            RHSf = RHSf - 0.5*scaleFactor*runTime.deltaTValue()*(k1f + k2f);
+            cf_temp = cf_temp + deltaTf2*(k1f + k2f);
+        }
+
+        // Time stepping for the coarse zone
+        volScalarField cc_temp(
+            IOobject(
+                "cc_temp",
+                runTime.timeName(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            cc
+        );
+
+        volScalarField RHSc(cc);
+        forAll(RHSc, i) {
+            RHSc[i] = 0.0;
+        }
+
+        // Substepping for the fine region
+        volScalarField k1c = fvc::div(phic, cc_temp);
+        cc_temp = cc_temp + k1c*deltaT;
+        volScalarField k2c = fvc::div(phif, cc_temp);
+        RHSc = RHSc - 0.5*runTime.deltaTValue()*(k1c + k2c);
+
         cEqn.solve();
 
         runTime.write();
