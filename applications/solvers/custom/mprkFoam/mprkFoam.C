@@ -164,6 +164,55 @@ int main(int argc, char *argv[])
             fvm::ddt(c) == -fvc::div(phi, c)
         );
 
+        // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+        // Extracting the fields for the different zones
+
+        // Creating the fields for the fine zone
+        volScalarField cf(
+            IOobject(
+                "cf",
+                runTime.timeName(),
+                mesh,
+                IOobject::READ_IF_PRESENT,
+                IOobject::AUTO_WRITE
+            ),
+            subsetFine.interpolate(c)()
+        );
+
+        surfaceScalarField phif(
+            IOobject(
+                "phif",
+                runTime.timeName(),
+                mesh,
+                IOobject::READ_IF_PRESENT,
+                IOobject::AUTO_WRITE
+            ),
+            subsetFine.interpolate(phi)()
+        );
+
+        // Creating the fields for the coarse zone
+        volScalarField cc(
+            IOobject(
+                "cc",
+                runTime.timeName(),
+                mesh,
+                IOobject::READ_IF_PRESENT,
+                IOobject::AUTO_WRITE
+            ),
+            subsetCoarse.interpolate(c)()
+        );
+
+        surfaceScalarField phic(
+            IOobject(
+                "phic",
+                runTime.timeName(),
+                mesh,
+                IOobject::READ_IF_PRESENT,
+                IOobject::AUTO_WRITE
+            ),
+            subsetCoarse.interpolate(phi)()
+        );
+        
         cEqn.solve();
 
         runTime.write();
