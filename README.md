@@ -1,3 +1,11 @@
+MPRK Methods Integrated into OpenFOAM
+=====================================
+This repository is a fork of OpenFOAM found at [https://github.com/OpenFOAM/OpenFOAM-dev](https://github.com/OpenFOAM/OpenFOAM-dev).
+
+In this repository a custom solver has been added to the `applications/custom/` called `mprkFoam`. A tutorial has also been added to `tutorials/custom` by the name `mprk1d`.
+
+Original README for the OpenFOAM-dev project can be found below
+===============================================================
 #                            -*- mode: org; -*-
 #
 #+TITLE:     README for [[http://openfoam.org/download/source][OpenFOAM-dev]]
