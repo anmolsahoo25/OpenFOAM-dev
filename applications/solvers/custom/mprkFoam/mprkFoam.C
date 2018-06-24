@@ -32,6 +32,7 @@ Description
 #include "fvCFD.H"
 #include "fvOptions.H"
 #include "simpleControl.H"
+#include "dynamicRefineFvMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -64,6 +65,7 @@ int main(int argc, char *argv[])
 
     #include "CourantNo.H"
 
+    /*
     while (simple.loop(runTime))
     {
         Info<< "Time = " << runTime.timeName() << nl << endl;
@@ -87,6 +89,7 @@ int main(int argc, char *argv[])
 
         runTime.write();
     }
+    */
 
     Info<< "End\n" << endl;
 
