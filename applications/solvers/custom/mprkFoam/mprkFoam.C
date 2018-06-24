@@ -58,38 +58,118 @@ int main(int argc, char *argv[])
     simpleControl simple(mesh);
 
     #include "createFields.H"
-
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     Info<< "\nCalculating scalar transport\n" << endl;
 
     #include "CourantNo.H"
 
-    /*
     while (simple.loop(runTime))
     {
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
-        while (simple.correctNonOrthogonal())
-        {
-            fvScalarMatrix TEqn
-            (
-                fvm::ddt(T)
-              + fvm::div(phi, T)
-              - fvm::laplacian(DT, T)
-             ==
-                fvOptions(T)
-            );
+        
+        // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+        // Marking the coarse and fine zones
 
-            TEqn.relax();
-            fvOptions.constrain(TEqn);
-            TEqn.solve();
-            fvOptions.correct(T);
+        labelList fineCellRegion(mesh.nCells(), 0);
+        labelList coarseCellRegion(mesh.nCells(), 0);
+
+        
+        scalar coarseVolume = 0.0f;
+        scalar fineVolume = mesh.V()[0];
+
+        // Finding the coarse volume and fine volumes values
+        forAll(mesh.C(), i) {
+            if(mesh.V()[i] > coarseVolume) {
+                coarseVolume = mesh.V()[i];
+            }
+            if(mesh.V()[i] < fineVolume) {
+                fineVolume = mesh.V()[i];
+            }
         }
 
+        // Marking the regions
+        forAll(mesh.C(), i) {
+            if(cmptMag(mesh.V()[i] - coarseVolume) > 1e-10) {
+                fineCellRegion[i] = 2;
+            }
+            else {
+                coarseCellRegion[i] = 2;
+            }
+        }
+
+        // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+        // Creating fast-slow interface for stability
+
+        // Number of cells around cell zone to create as interface
+        int numLayers = 5;
+
+        for(int i = 0; i < numLayers; i++) {
+            forAll(mesh.C(), j) {
+                if(fineCellRegion[j] != 2) {
+                    forAll(mesh.cellCells()[j], k) {
+                        if(fineCellRegion[mesh.cellCells()[j][k]] == 2) {
+                            fineCellRegion[j] = 2;
+                        }
+                    }
+                }
+
+                if(coarseCellRegion[j] != 2) {
+                    forAll(mesh.cellCells()[j], k) {
+                        if(coarseCellRegion[mesh.cellCells()[j][k]] == 2) {
+                            coarseCellRegion[j] = 2;
+                        }
+                    }
+                }
+            }
+        }
+
+        // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+        // Handling cyclic patches
+        // Make sure that the any cells adjacent to cyclic faces are in the subset
+        
+        const fvBoundaryMesh& boundary = mesh.boundary();
+        forAll(boundary, patchI) {
+            if(boundary[patchI].coupled() == true) {
+                forAll(boundary[patchI].faceCells(), cellI) {
+                    label cellIndex = boundary[patchI].faceCells()[cellI];
+                    fineCellRegion[cellIndex] = 2;
+                    coarseCellRegion[cellIndex] = 2;
+                    forAll(mesh.cellCells()[cellIndex], k) {
+                        label n1 = mesh.cellCells()[cellIndex][k];
+                        fineCellRegion[n1] = 2;
+                        coarseCellRegion[n1] = 2;
+                        forAll(mesh.cellCells()[n1], l) {
+                            label n2 = mesh.cellCells()[n1][l];
+                            fineCellRegion[n2] = 2;
+                            coarseCellRegion[n2] = 2;
+                        }
+                    }
+                }
+            }
+        }
+
+        // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+        // Creating the mesh subsets
+        
+        fvMeshSubset subsetFine(mesh);
+        fvMeshSubset subsetCoarse(mesh);
+
+        subsetFine.setLargeCellSubset(fineCellRegion, 2);
+        subsetCoarse.setLargeCellSubset(coarseCellRegion, 2);
+        
+        fvScalarMatrix cEqn
+        (
+            fvm::ddt(c) == -fvc::div(phi, c)
+        );
+
+        cEqn.solve();
+
         runTime.write();
+
+        mesh.update();
     }
-    */
 
     Info<< "End\n" << endl;
 
