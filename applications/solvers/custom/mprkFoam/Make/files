@@ -1,0 +1,3 @@
+mprkFoam.C
+
+EXE = $(FOAM_APPBIN)/mprkFoam
